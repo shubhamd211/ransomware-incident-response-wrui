@@ -1,11 +1,11 @@
 # STOP/Djvu Ransomware (.wrui) Forensics & Partial Data Recovery
 
-A technical exploration and data carving project demonstrating a vulnerability/flaw in the payload delivery of the **STOP/Djvu (.wrui) ransomware variant (2021)**. This project highlights a method to bypass server-side encryption limits and reconstruct partially destroyed document structures.
+A technical exploration and data carving project demonstrating a vulnerability/flaw in the payload delivery of the **STOP/Djvu (.wrui) ransomware variant (2021)**. This project highlights a method to salvage partial document data after encryption without paying the ransom.
 
 ## 📌 Project Overview
-When dealing with online/server-side cryptographic keys, universal decryption is mathematically impossible without the private key. However, this project focuses on a structural flaw in the malware's efficiency optimization strategy: **Partial File Encryption**. 
+When dealing with online/server-side cryptographic keys, universal decryption is mathematically impossible without the private key. However, this project focuses on a structural flaw in the malware's encryption strategy rather than a cryptographic break.
 
-To maximize execution speed, the ransomware only encrypts the initial block (typically the first 150KB to 5MB) of larger files, leaving the remaining payload completely raw but structurally orphaned. This repository contains the methodology used to carve, reconstruct, and salvage up to 50% of document data from infected `.wrui` files.
+To maximize execution speed, the ransomware only encrypts the initial block (typically the first 150KB to 5MB) of larger files, leaving the remaining payload completely raw but structurally orphaned.
 
 ---
 
@@ -15,7 +15,7 @@ To maximize execution speed, the ransomware only encrypts the initial block (typ
 **Domain:** Digital Forensics, Malware Behavioral Analysis, Binary Data Carving
 
 * **The Problem:** The STOP/Djvu ransomware family leverages server-side cryptographic keys, making mathematical decryption impossible once deployed.
-* **The Vulnerability:** To accelerate execution, the payload employs partial file encryption, scrambling only the initial block (150 KB to 5 MB) while leaving subsequent document byte streams untouched.
+* **The Vulnerability:** To accelerate execution, the payload employs partial file encryption, scrambling only the initial block (150 KB to 5 MB) while leaving subsequent document byte streams untouched and recoverable.
 * **The Solution:** Engineered a raw binary extraction pipeline using:
   * **Entropy Mapping:** Pinpointing exact transition points between high-entropy (encrypted) headers and low-entropy (raw) payloads.
   * **PDF Stream Reconstruction:** Bypassing stripped XREF tables and forcing tolerant parsers to render surviving object streams.
@@ -29,8 +29,8 @@ To maximize execution speed, the ransomware only encrypts the initial block (typ
 The recovery methodology relies on analyzing how the malware interfaces with different document structures:
 
 ### 1. File-Specific Encryption Profiles
-* **High-Volume / Large Documents (.pdf):** The ransomware scrambles the file header and cross-reference tables (XREF) at the beginning of the file. However, the body text streams, fonts, and object compressions remain unencrypted in the latter half of the byte stream.
-* **OpenXML Archives (.docx, .xlsx, .pptx):** Modern Microsoft Office assets are zipped XML infrastructures. While the main ZIP header is corrupted, individual internal XML structural fragments (containing the actual raw text strings) survive the attack if they reside past the encryption boundary.
+* **High-Volume / Large Documents (.pdf):** The ransomware scrambles the file header and cross-reference tables (XREF) at the beginning of the file. However, the body text streams, fonts, and object contents often remain intact beyond the encrypted prefix.
+* **OpenXML Archives (.docx, .xlsx, .pptx):** Modern Microsoft Office assets are zipped XML infrastructures. While the main ZIP header is corrupted, individual internal XML structural fragments (contained within the archive) can often be extracted and reassembled.
 
 ### 2. The Recovery Pipeline
 The extraction process bypasses the operating system's default file parsers (which throw corruption errors due to missing headers) by treating the data as raw binary streams:
@@ -55,11 +55,14 @@ The extraction process bypasses the operating system's default file parsers (whi
 * Automated extraction pipelines for batch-repairing salvaged `.wrui` documentation.
 
 ### ⚠️ The Cryptographic Roadblock: Online vs. Offline Keys
-Initial remediation attempts followed standard industry playbooks, utilizing tools like the Emsisoft STOP Djvu Decryptor. However, behavioral analysis via ANY.RUN revealed that the malware successfully established an outbound connection to its Command & Control (C2) infrastructure before encrypting.
+Initial remediation attempts followed standard industry playbooks, utilizing tools like the Emsisoft STOP Djvu Decryptor. However, behavioral analysis via ANY.RUN revealed that the malware successfully used an **Online ID** infection pattern.
 
-This resulted in an **Online ID** infection. Unlike Offline ID infections (which rely on a hardcoded, crackable key), an Online ID generates a unique RSA-2048 key pair per victim, with the private key retained exclusively on the attacker's server. 
+This resulted in an **Online ID** infection. Unlike Offline ID infections (which rely on a hardcoded, crackable key), an Online ID generates a unique RSA-2048 key pair per victim, with the private key stored remotely by the attacker. Because mathematical decryption is impossible without this private key, traditional decryption workflows failed. This failure necessitated a pivot from **Cryptographic Reversal** to **Binary Data Carving** and forensic reconstruction.
 
-Because mathematical decryption is impossible without this private key, traditional decryption workflows failed. This failure necessitated a pivot from **Cryptographic Reversal** to **Binary Data Carving**. By ignoring the mathematically secure encryption wrapper, this project focused exclusively on exploiting the ransomware's structural implementation flaw.
+### 🗺️ MITRE ATT&CK TTP Mapping
+* **[TA0002] Execution:** Command and Scripting Interpreter (T1059)
+* **[TA0040] Impact:** Data Encrypted for Impact (T1486)
+* **[TA0040] Impact:** Inhibit System Recovery (T1490) - *Shadow Copy Deletion*
+* **[TA0011] Command and Control:** Application Layer Protocol (T1071) - *Online ID Key Retrieval*
 
 *Disclaimer: This repository is intended strictly for educational, data forensics, and security research purposes.*
-
