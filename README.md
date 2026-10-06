@@ -9,6 +9,21 @@ To maximize execution speed, the ransomware only encrypts the initial block (typ
 
 ---
 
+## 🛡️ Featured Research: STOP/Djvu (.wrui) Forensics & Data Carving
+
+**Repository:** [shubhamd211/ransomware-incident-response-wrui](https://github.com/shubhamd211/ransomware-incident-response-wrui)  
+**Domain:** Digital Forensics, Malware Behavioral Analysis, Binary Data Carving
+
+* **The Problem:** The STOP/Djvu ransomware family leverages server-side cryptographic keys, making mathematical decryption impossible once deployed.
+* **The Vulnerability:** To accelerate execution, the payload employs partial file encryption, scrambling only the initial block (150 KB to 5 MB) while leaving subsequent document byte streams untouched.
+* **The Solution:** Engineered a raw binary extraction pipeline using:
+  * **Entropy Mapping:** Pinpointing exact transition points between high-entropy (encrypted) headers and low-entropy (raw) payloads.
+  * **PDF Stream Reconstruction:** Bypassing stripped XREF tables and forcing tolerant parsers to render surviving object streams.
+  * **OpenXML Schema Carving:** Extracting surviving compressed XML packets directly from corrupted ZIP container envelopes.
+* **Result:** Salvaged up to 50% of compromised enterprise documents without ransom interaction.
+
+---
+
 ## 🔬 Technical Insight & Flaw Exploitation
 
 The recovery methodology relies on analyzing how the malware interfaces with different document structures:
