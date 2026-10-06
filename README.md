@@ -54,4 +54,12 @@ The extraction process bypasses the operating system's default file parsers (whi
 * Automation scripts to automatically detect the encryption boundary based on byte entropy.
 * Automated extraction pipelines for batch-repairing salvaged `.wrui` documentation.
 
+### ⚠️ The Cryptographic Roadblock: Online vs. Offline Keys
+Initial remediation attempts followed standard industry playbooks, utilizing tools like the Emsisoft STOP Djvu Decryptor. However, behavioral analysis via ANY.RUN revealed that the malware successfully established an outbound connection to its Command & Control (C2) infrastructure before encrypting.
+
+This resulted in an **Online ID** infection. Unlike Offline ID infections (which rely on a hardcoded, crackable key), an Online ID generates a unique RSA-2048 key pair per victim, with the private key retained exclusively on the attacker's server. 
+
+Because mathematical decryption is impossible without this private key, traditional decryption workflows failed. This failure necessitated a pivot from **Cryptographic Reversal** to **Binary Data Carving**. By ignoring the mathematically secure encryption wrapper, this project focused exclusively on exploiting the ransomware's structural implementation flaw.
+
 *Disclaimer: This repository is intended strictly for educational, data forensics, and security research purposes.*
+
