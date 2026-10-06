@@ -40,6 +40,41 @@ The extraction process bypasses the operating system's default file parsers (whi
    * For **PDFs**: Re-indexing surviving object streams and forcefully rendering pages via tolerant layout engines.
    * For **Office Docs**: Re-assembling fragmented XML data blocks into clean, readable text schemas.
 
+### ⚙️ Automated Stream Re-indexing vs. Manual Carving
+While manual hex-editing is effective for targeted recovery, STOP/Djvu PDF stream reconstruction can be automated by passing the partially encrypted payloads through tolerant PDF repair engines (e.g., Ghostscript-based parsers or commercial API engines). 
+
+Standard PDF readers (like Adobe) halt execution upon encountering a high-entropy, corrupted `%PDF-1.x` header. Automated forensic repair tools bypass this by scanning past the 150 KB blast radius, isolating surviving `obj` streams, and synthesizing a brand-new file envelope around the surviving data.
+
+#### PDF Reconstruction State Transition
+*The flowchart below illustrates how an automated engine bypasses the STOP/Djvu encryption boundary to rebuild the document structure.*
+
+```mermaid
+graph TD
+    classDef encrypted fill:#ffebee,stroke:#c62828,stroke-width:2px;
+    classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A[Corrupted .wrui PDF\nTop 150KB: Encrypted\nBottom: Raw Objects]:::encrypted --> B
+    
+    B(Phase 1: Bypass & Scan\nEngine ignores entropy):::process --> C
+    
+    C{Locate First Valid 'obj'}:::process -->|Stream Found| D
+    
+    D[Phase 2: Extract & Buffer\nPull surviving text, fonts, vectors]:::process --> E
+    
+    E(Phase 3: Synthesize & Rebuild):::process --> F
+    E --> G
+    E --> H
+    
+    F[Prepend New %PDF Header]:::success --> I
+    G[Write Surviving Objects]:::success --> I
+    H[Calculate & Append New XREF Table]:::success --> I
+    
+    I((Fully Functional PDF)):::success
+```
+
+**Forensic Note:** This achieves 100% functional data salvage, but only a partial byte recovery. The original file metadata, initial catalogs, and top-level fonts destroyed in the first 150 KB are permanently lost, but modern PDF renderers tolerate these omissions by falling back to system defaults.
+
 ---
 
 ## 🛠️ Skills Demonstrated
